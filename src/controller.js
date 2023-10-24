@@ -37,5 +37,15 @@ class LibroController{
             console.log(e);
         }
     }
+
+    async delete(req, res) {
+        try {
+            const libro = req.body;
+            const [result] = await pool.query (`DELETE FROM Libros WHERE ISBN=(?)`, libro.ISBN);
+            res.json({"Registros eliminados": result.affectedRows});
+        }catch(e) {
+            console.log(e);
+        }
+    }
 }
 export const libro = new LibroController();
