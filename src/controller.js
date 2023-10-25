@@ -15,9 +15,14 @@ class LibroController{
         try {
         const libro = req.body;
         const [result] = await pool.query(`INSERT INTO Libros(nombre, autor, categoria, date, ISBN) VALUES (?, ?, ?, ?, ?)`, [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN]);
-        res.json({"Id insertado": result.insertId});
-        } catch(e) {
-            console.log(e);
+        if(result.length > 0) {
+            res.json(result[0]);
+            res.json({"Id insertado": result.insertId, "message": "Libro insertado correctamente"});
+        } else {
+            res.json({"Error":"No se puedo agregar el libro, campos insertados erroneos"})
+        }
+        }catch(error) {
+            res.json({"Error": "Ocurrió un error al agregar el libro"});
         }
     }
 
