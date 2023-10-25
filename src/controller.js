@@ -2,15 +2,23 @@ import {pool} from './database.js';
 
 class LibroController{
 
-    async getAll(req, res) { //mostras todos los libros "http://localhost:3000/libros"
+    async getAll(req, res) { //se muestran todos los libros "http://localhost:3000/libros"
+        try {
         const [result] = await pool.query('SELECT * FROM libros');
         res.json(result);
+        } catch(e) {
+            console.log(e);
+        }
     }
 
     async add(req, res) { //agregar libro "http://localhost:3000/libro"
+        try {
         const libro = req.body;
         const [result] = await pool.query(`INSERT INTO Libros(nombre, autor, categoria, date, ISBN) VALUES (?, ?, ?, ?, ?)`, [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN]);
         res.json({"Id insertado": result.insertId});
+        } catch(e) {
+            console.log(e);
+        }
     }
 
     async getOne(req, res) { //buscar libro con numero de id "http://localhost:3000/libro"
@@ -28,7 +36,7 @@ class LibroController{
         }
     }
 
-    async update (req, res) {
+    async update (req, res) { //actualiza un libro "http://localhost:3000/libro"
         try {
             const libro = req.body;
             const [result] = await pool.query (`UPDATE Libros SET nombre=(?), autor=(?), categoria=(?), date=(?), ISBN=(?) WHERE id=(?)`, [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN, libro.id]);
@@ -38,7 +46,7 @@ class LibroController{
         }
     }
 
-    async delete(req, res) {
+    async delete(req, res) { //elimina un libro, insertando su ISBN "http://localhost:3000/libro"
         try {
             const libro = req.body;
             const [result] = await pool.query (`DELETE FROM Libros WHERE ISBN=(?)`, libro.ISBN);
