@@ -73,14 +73,20 @@ class LibroController{
         }
     }
     
-    async delete(req, res) { //elimina un libro, insertando su ISBN "http://localhost:3000/libro"
+    async delete(req, res) { // Elimina un libro, insertando su ISBN "http://localhost:3000/libro"
         try {
             const libro = req.body;
-            const [result] = await pool.query (`DELETE FROM Libros WHERE ISBN=(?)`, libro.ISBN);
-            res.json({"Registros eliminados": result.affectedRows});
-        }catch(e) {
-            console.log(e);
+            const [result] = await pool.query(`DELETE FROM Libros WHERE ISBN = ?`, libro.ISBN);
+    
+            if (result.affectedRows > 0) {
+                res.json({ "message": `Libro con ISBN ${libro.ISBN} eliminado correctamente` });
+            } else {
+                res.json({ "Error": `No se encontró ningún libro con el ISBN ${libro.ISBN}` });
+            }
+        } catch (error) {
+            res.json({ "Error": "Ocurrió un error al eliminar el libro", "Details": error.message });
         }
     }
+    
 }
 export const libro = new LibroController();
