@@ -13,16 +13,28 @@ class LibroController{
 
     async add(req, res) { //agregar libro "http://localhost:3000/libro"
         try {
-        const libro = req.body;
-        const [result] = await pool.query(`INSERT INTO Libros(nombre, autor, categoria, date, ISBN) VALUES (?, ?, ?, ?, ?)`, [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN]);
-        if(result.length > 0) {
-            res.json(result[0]);
-            res.json({"Id insertado": result.insertId, "message": "Libro insertado correctamente"});
-        } else {
-            res.json({"Error":"No se puedo agregar el libro, campos insertados erroneos"})
-        }
-        }catch(error) {
-            res.json({"Error": "Ocurrió un error al agregar el libro"});
+            const expectedFields = ['nombre', 'autor', 'categoria', 'date', 'ISBN'];
+            const providedFields = Object.keys(req.body);
+    
+            // Comprobar si se han proporcionado campos adicionales
+            const extraFields = providedFields.filter(field => !expectedFields.includes(field));
+    
+            if (extraFields.length > 0) {
+                return res.json({"Error": "Campos adicionales proporcionados", "Campos inválidos": extraFields});
+            }
+    
+            const { nombre, autor, categoria, date, ISBN } = req.body;
+            const libro = { nombre, autor, categoria, date, ISBN };
+    
+            const [result] = await pool.query('INSERT INTO Libros(nombre, autor, categoria, date, ISBN) VALUES (?, ?, ?, ?, ?)', [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN]);
+    
+            if (result.affectedRows > 0) {
+                res.json({"Id insertado": result.insertId});
+            } else {
+                res.json({"Error":"No se pudo agregar el libro, campos insertados erroneos"});
+            }
+        } catch(error) {
+            res.json({"Error": "Ocurrió un error al agregar el libro", "Details": error.message});
         }
     }
 
@@ -41,16 +53,26 @@ class LibroController{
         }
     }
 
-    async update (req, res) { //actualiza un libro "http://localhost:3000/libro"
+    async update(req, res) { // Actualiza un libro "http://localhost:3000/libro"
         try {
             const libro = req.body;
-            const [result] = await pool.query (`UPDATE Libros SET nombre=(?), autor=(?), categoria=(?), date=(?), ISBN=(?) WHERE id=(?)`, [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN, libro.id]);
-            res.json({"Registros Actualizados": result.changedRows});
-        }catch(e) {
-            console.log(e);
+            const [result] = await pool.query(
+                `UPDATE Libros 
+                 SET nombre = ?, autor = ?, categoria = ?, date = ? 
+                 WHERE ISBN = ?`,
+                [libro.nombre, libro.autor, libro.categoria, libro.date, libro.ISBN]
+            );
+    
+            if (result.affectedRows > 0) {
+                res.json({ "message": `Libro con ISBN ${libro.ISBN} actualizado correctamente` });
+            } else {
+                res.json({ "Error": `No se encontró ningún libro con el ISBN ${libro.ISBN}` });
+            }
+        } catch (error) {
+            res.json({ "Error": "Ocurrió un error al actualizar el libro", "Details": error.message });
         }
     }
-
+    
     async delete(req, res) { //elimina un libro, insertando su ISBN "http://localhost:3000/libro"
         try {
             const libro = req.body;
